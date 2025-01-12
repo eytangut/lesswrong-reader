@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LessWrong Random Reader</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .reading-progress {
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 4px;
+            background: #4F46E5;
+            transition: width 0.3s ease;
+        }
+        .iframe-container {
+            height: calc(100vh - 200px);
+        }
+    </style>
+</head>
+<body class="bg-gray-100">
+    <div class="reading-progress" id="readingProgress"></div>
+    
+    <div class="container mx-auto px-4 py-8">
+        <header class="mb-8">
+            <h1 class="text-3xl font-bold text-gray-800 mb-2">LessWrong Random Reader</h1>
+            <div class="flex justify-between items-center">
+                <div class="text-gray-600" id="readingTime"></div>
+                <div class="flex gap-4">
+                    <button id="favoriteBtn" class="px-4 py-2 bg-yellow-500 text-white rounded hover:bg-yellow-600 transition">
+                        ★ Favorite
+                    </button>
+                    <button id="showFavoritesBtn" class="px-4 py-2 bg-purple-500 text-white rounded hover:bg-purple-600 transition">
+                        Show Favorites
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <div id="favoritesModal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center">
+            <div class="bg-white p-8 rounded-lg max-w-2xl max-h-[80vh] overflow-y-auto w-full">
+                <h2 class="text-2xl font-bold mb-4">Favorite Articles</h2>
+                <div id="favoritesList" class="space-y-2"></div>
+                <button id="closeFavoritesBtn" class="mt-4 px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600 transition">
+                    Close
+                </button>
+            </div>
+        </div>
+
+        <main>
+            <div class="bg-white rounded-lg shadow-lg p-4 mb-8">
+                <h2 id="articleTitle" class="text-2xl font-bold mb-4"></h2>
+                <div class="iframe-container">
+                    <iframe id="articleFrame" class="w-full h-full border-0"></iframe>
+                </div>
+            </div>
+            
+            <div class="flex justify-center">
+                <button id="nextBtn" class="px-6 py-3 bg-indigo-500 text-white rounded-lg hover:bg-indigo-600 transition">
+                    Next Article
+                </button>
+            </div>
+        </main>
+    </div>
+
+    <script>
+      function getRandomIndex(arr) {
+        const maxIndex = arr.length - 1;  // Get the last index of the array
+        return Math.floor(Math.random() * (maxIndex + 1));  // Generate a random index between 0 and maxIndex
+      }
+        // Articles data - this would normally be in a separate JSON file
+        const articles = [
+            { id: 1, title: "The Sequences", url: "https://www.lesswrong.com/sequences" },
+            { id: 2, title: "A Map That Reflects the Territory", url: "https://www.lesswrong.com/s/zpCiuR4T343j9WkcK" },
+            // ... Add more articles here (total 666)
+        ];
+
+        // State management
+        let currentArticleIndex = parseInt(localStorage.getItem('currentArticleIndex')) || getRandomIndex(articles);
+        let favorites = JSON.parse(localStorage.getItem('favorites')) || [];
+        let readingStartTime = Date.now();
+        let lastScrollPosition = 0;
+        let totalHeight = 0;
+
+        // DOM elements
+        const articleFrame = document.getElementById('articleFrame');
+        const articleTitle = document.getElementById('articleTitle');
+        const readingTime = document.getElementById('readingTime');
+        const readingProgress = document.getElementById('readingProgress');
+        const favoriteBtn = document.getElementById('favoriteBtn');
+        const showFavoritesBtn = document.getElementById('showFavoritesBtn');
+        const favoritesModal = document.getElementById('favoritesModal');
+        const favoritesList = document.getElementById('favoritesList');
+        const closeFavoritesBtn = document.getElementById('closeFavoritesBtn');
+        const nextBtn = document.getElementById('nextBtn');
+
+        // Initialize
+        function loadArticle() {
+            const article = articles[currentArticleIndex];
+            articleTitle.textContent = "Lesswrong Article";
+            articleFrame.src = article;
+            localStorage.setItem('currentArticleIndex', currentArticleIndex);
+            updateFavoriteButton();
+            readingStartTime = Date.now();
+            lastScrollPosition = 0;
+        }
+
+        // Reading time estimation
+        function updateReadingTime() {
+            const wordsPerMinute = 200;
+            const article = articles[currentArticleIndex];
+            const storedProgress = JSON.parse(localStorage.getItem(`progress_${articles.indexOf(article)}`)) || { timeSpent: 0, lastPosition: 0 };
+            
+            const timeSpentMinutes = Math.floor((Date.now() - readingStartTime + storedProgress.timeSpent) / 60000);
+            const estimatedTotalMinutes = Math.ceil(totalHeight / 1000 * wordsPerMinute);
+            const remainingMinutes = Math.max(0, estimatedTotalMinutes - timeSpentMinutes);
+            
+            readingTime.textContent = `~${remainingMinutes} minutes left`;
+        }
+
+        // Progress tracking
+        articleFrame.onload = function() {
+            const doc = articleFrame.contentDocument;
+            const postBody = doc.getElementById('postBody');
+            if (postBody) {
+                totalHeight = postBody.scrollHeight;
+                setInterval(updateReadingTime, 1000);
+            }
+        };
+
+        // Favorites management
+        function updateFavoriteButton() {
+            const article = articles[currentArticleIndex];
+            favoriteBtn.textContent = favorites.includes(articles.indexOf(article)) ? '★ Unfavorite' : '★ Favorite';
+        }
+
+        function toggleFavorite() {
+            const article = articles[currentArticleIndex];
+            const index = favorites.indexOf(articles.indexOf(article));
+            
+            if (index === -1) {
+                favorites.push(articles.indexOf(article));
+            } else {
+                favorites.splice(index, 1);
+            }
+            
+            localStorage.setItem('favorites', JSON.stringify(favorites));
+            updateFavoriteButton();
+        }
+
+        function showFavorites() {
+            favoritesList.innerHTML = '';
+            favorites.forEach(id => {
+                const article = articles.find(a => articles.indexOf(a) === id);
+                if (article) {
+                    const div = document.createElement('div');
+                    div.className = 'p-2 hover:bg-gray-100 cursor-pointer rounded';
+                    div.textContent = "Lesswrong Article";
+                    div.onclick = () => {
+                        currentArticleIndex = articles.indexOf(article);
+                        loadArticle();
+                        favoritesModal.classList.add('hidden');
+                    };
+                    favoritesList.appendChild(div);
+                }
+            });
+            favoritesModal.classList.remove('hidden');
+        }
+
+        // Event listeners
+        nextBtn.onclick = () => {
+            currentArticleIndex = getRandomIndex(articles);
+            loadArticle();
+        };
+
+        favoriteBtn.onclick = toggleFavorite;
+        showFavoritesBtn.onclick = showFavorites;
+        closeFavoritesBtn.onclick = () => favoritesModal.classList.add('hidden');
+
+        // Initialize the app
+        loadArticle();
+    </script>
+</body>
+</html>
