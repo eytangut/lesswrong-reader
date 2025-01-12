@@ -50,7 +50,7 @@
 
         <main>
             <div class="bg-white rounded-lg shadow-lg p-4 mb-8">
-                <h2 id="articleTitle" class="text-2xl font-bold mb-4"></h2>
+                <a id="articleTitle" class="text-2xl font-bold mb-4"></a>
                 <div class="iframe-container">
                     <iframe id="articleFrame" class="w-full h-full border-0"></iframe>
                 </div>
@@ -713,13 +713,12 @@
         const favoritesList = document.getElementById('favoritesList');
         const closeFavoritesBtn = document.getElementById('closeFavoritesBtn');
         const nextBtn = document.getElementById('nextBtn');
-        const frame = document.getElementByClassName('iframe-container');
 
         // Initialize
         function loadArticle() {
             const article = articles[currentArticleIndex];
             articleTitle.textContent = "Lesswrong Article";
-            articleFrame.src = `https://lesswrong.com${article}`;
+            articleTitle.href = `https://lesswrong.com${article}`
             localStorage.setItem('currentArticleIndex', currentArticleIndex);
             updateFavoriteButton();
             readingStartTime = Date.now();
@@ -803,7 +802,6 @@
 
         // Initialize the app
         loadArticle();
-        frame.innerHTML = `<iframe src="https://lesswrong.com${article}></iframe>`
     </script>
 </body>
 </html>
