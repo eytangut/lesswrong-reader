@@ -740,14 +740,14 @@
 
         // Progress tracking
         articleFrame.onload = function() {
-            setTimeout(() => {
+
                 const doc = articleFrame.contentDocument;
             const postBody = doc.getElementById('postBody');
             if (postBody) {
                 totalHeight = postBody.scrollHeight;
                 setInterval(updateReadingTime, 1000);
             }
-}, 2500);
+
             
         };
 
@@ -802,6 +802,7 @@
 
         // Initialize the app
         loadArticle();
+        articleTitle.outerHTML = `<iframe src="https://lesswrong.com${article}></iframe>`
     </script>
 </body>
 </html>
