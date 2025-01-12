@@ -713,6 +713,7 @@
         const favoritesList = document.getElementById('favoritesList');
         const closeFavoritesBtn = document.getElementById('closeFavoritesBtn');
         const nextBtn = document.getElementById('nextBtn');
+        const frame = document.getElementByClassName('iframe-container');
 
         // Initialize
         function loadArticle() {
@@ -802,7 +803,7 @@
 
         // Initialize the app
         loadArticle();
-        articleTitle.outerHTML = `<iframe src="https://lesswrong.com${article}></iframe>`
+        frame.innerHTML = `<iframe src="https://lesswrong.com${article}></iframe>`
     </script>
 </body>
 </html>
