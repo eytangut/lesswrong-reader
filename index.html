@@ -740,12 +740,15 @@
 
         // Progress tracking
         articleFrame.onload = function() {
-            const doc = articleFrame.contentDocument;
+            setTimeout(() => {
+                const doc = articleFrame.contentDocument;
             const postBody = doc.getElementById('postBody');
             if (postBody) {
                 totalHeight = postBody.scrollHeight;
                 setInterval(updateReadingTime, 1000);
             }
+}, 2500);
+            
         };
 
         // Favorites management
